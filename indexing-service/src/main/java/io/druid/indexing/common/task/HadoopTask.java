@@ -147,7 +147,7 @@ public abstract class HadoopTask extends AbstractTask
 
     final List<URL> extensionURLs = Lists.newArrayList();
     for (final File extension : Initialization.getExtensionFilesToLoad(extensionsConfig)) {
-      final ClassLoader extensionLoader = Initialization.getClassLoaderForExtension(extension, false);
+      final ClassLoader extensionLoader = Initialization.getClassLoaderForExtension(extension);
       extensionURLs.addAll(Arrays.asList(((URLClassLoader) extensionLoader).getURLs()));
     }
 
@@ -161,7 +161,7 @@ public abstract class HadoopTask extends AbstractTask
             finalHadoopDependencyCoordinates,
             extensionsConfig
         )) {
-      final ClassLoader hadoopLoader = Initialization.getClassLoaderForExtension(hadoopDependency, false);
+      final ClassLoader hadoopLoader = Initialization.getClassLoaderForExtension(hadoopDependency);
       localClassLoaderURLs.addAll(Arrays.asList(((URLClassLoader) hadoopLoader).getURLs()));
     }
 

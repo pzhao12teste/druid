@@ -20,8 +20,11 @@
 package io.druid.server.coordinator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.druid.client.ImmutableDruidServer;
+import com.google.inject.Inject;
 import io.druid.java.util.http.client.HttpClient;
+import io.druid.client.ImmutableDruidServer;
+import io.druid.guice.annotations.Global;
+import io.druid.guice.annotations.Json;
 import io.druid.server.initialization.ZkPathsConfig;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -42,13 +45,14 @@ public class LoadQueueTaskMaster
   private final HttpClient httpClient;
   private final ZkPathsConfig zkPaths;
 
+  @Inject
   public LoadQueueTaskMaster(
       CuratorFramework curator,
-      ObjectMapper jsonMapper,
+      @Json ObjectMapper jsonMapper,
       ScheduledExecutorService peonExec,
       ExecutorService callbackExec,
       DruidCoordinatorConfig config,
-      HttpClient httpClient,
+      @Global HttpClient httpClient,
       ZkPathsConfig zkPaths
   )
   {
