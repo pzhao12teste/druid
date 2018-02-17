@@ -28,8 +28,8 @@ import io.druid.indexer.TaskStatusPlus;
 import io.druid.java.util.common.Intervals;
 import io.druid.java.util.common.StringUtils;
 import io.druid.server.coordinator.CoordinatorCompactionConfig;
+import io.druid.server.coordinator.CoordinatorDynamicConfig;
 import io.druid.server.coordinator.CoordinatorStats;
-import io.druid.server.coordinator.DataSourceCompactionConfig;
 import io.druid.server.coordinator.DruidCoordinatorRuntimeParams;
 import io.druid.timeline.DataSegment;
 import io.druid.timeline.TimelineObjectHolder;
@@ -115,7 +115,7 @@ public class DruidCoordinatorSegmentCompactorTest
     }
   };
 
-  private List<DataSourceCompactionConfig> compactionConfigs;
+  private List<CoordinatorCompactionConfig> compactionConfigs;
   private Map<String, VersionedIntervalTimeline<String, DataSegment>> dataSources;
 
   @Before
@@ -125,7 +125,7 @@ public class DruidCoordinatorSegmentCompactorTest
     for (int i = 0; i < 3; i++) {
       final String dataSource = DATA_SOURCE_PREFIX + i;
       compactionConfigs.add(
-          new DataSourceCompactionConfig(
+          new CoordinatorCompactionConfig(
               dataSource,
               0,
               50L,
@@ -214,7 +214,7 @@ public class DruidCoordinatorSegmentCompactorTest
       }
     };
     int expectedCompactTaskCount = 1;
-    int expectedRemainingSegments = 180;
+    int expectedRemainingSegments = 18;
 
     // compact for 2017-01-08T12:00:00.000Z/2017-01-09T12:00:00.000Z
     assertCompactSegments(
@@ -226,7 +226,7 @@ public class DruidCoordinatorSegmentCompactorTest
     );
 
     // compact for 2017-01-07T12:00:00.000Z/2017-01-08T12:00:00.000Z
-    expectedRemainingSegments -= 40;
+    expectedRemainingSegments -= 4;
     assertCompactSegments(
         compactor,
         Intervals.of(StringUtils.format("2017-01-%02dT12:00:00/2017-01-%02dT12:00:00", 4, 8)),
@@ -236,7 +236,7 @@ public class DruidCoordinatorSegmentCompactorTest
     );
 
     for (int endDay = 4; endDay > 1; endDay -= 1) {
-      expectedRemainingSegments -= 40;
+      expectedRemainingSegments -= 4;
       assertCompactSegments(
           compactor,
           Intervals.of(StringUtils.format("2017-01-%02dT12:00:00/2017-01-%02dT12:00:00", endDay - 1, endDay)),
@@ -287,7 +287,9 @@ public class DruidCoordinatorSegmentCompactorTest
     DruidCoordinatorRuntimeParams params = DruidCoordinatorRuntimeParams
         .newBuilder()
         .withDataSources(dataSources)
-        .withCompactionConfig(CoordinatorCompactionConfig.from(compactionConfigs))
+        .withDynamicConfigs(
+            CoordinatorDynamicConfig.builder().withCompactionConfigs(compactionConfigs).build()
+        )
         .build();
     return compactor.run(params).getCoordinatorStats();
   }
@@ -312,10 +314,10 @@ public class DruidCoordinatorSegmentCompactorTest
         // If expectedRemainingSegments is positive, we check how many dataSources have the segments waiting
         // compaction.
         long numDataSourceOfExpectedRemainingSegments = stats
-            .getDataSources(DruidCoordinatorSegmentCompactor.SEGMENT_SIZE_WAIT_COMPACT)
+            .getDataSources(DruidCoordinatorSegmentCompactor.SEGMENTS_WAIT_COMPACT)
             .stream()
             .mapToLong(dataSource -> stats.getDataSourceStat(
-                DruidCoordinatorSegmentCompactor.SEGMENT_SIZE_WAIT_COMPACT,
+                DruidCoordinatorSegmentCompactor.SEGMENTS_WAIT_COMPACT,
                 dataSource)
             )
             .filter(stat -> stat == expectedRemainingSegments)
@@ -325,7 +327,7 @@ public class DruidCoordinatorSegmentCompactorTest
         // Otherwise, we check how many dataSources are in the coordinator stats.
         Assert.assertEquals(
             2 - i,
-            stats.getDataSources(DruidCoordinatorSegmentCompactor.SEGMENT_SIZE_WAIT_COMPACT).size()
+            stats.getDataSources(DruidCoordinatorSegmentCompactor.SEGMENTS_WAIT_COMPACT).size()
         );
       }
     }

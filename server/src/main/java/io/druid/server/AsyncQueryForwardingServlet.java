@@ -44,6 +44,7 @@ import io.druid.server.metrics.QueryCountStatsProvider;
 import io.druid.server.router.QueryHostFinder;
 import io.druid.server.router.Router;
 import io.druid.server.security.AuthConfig;
+import io.druid.server.security.Escalator;
 import org.apache.http.client.utils.URIBuilder;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
@@ -111,6 +112,7 @@ public class AsyncQueryForwardingServlet extends AsyncProxyServlet implements Qu
   private final ServiceEmitter emitter;
   private final RequestLogger requestLogger;
   private final GenericQueryMetricsFactory queryMetricsFactory;
+  private final Escalator escalator;
 
   private HttpClient broadcastClient;
 
@@ -124,7 +126,8 @@ public class AsyncQueryForwardingServlet extends AsyncProxyServlet implements Qu
       @Router DruidHttpClientConfig httpClientConfig,
       ServiceEmitter emitter,
       RequestLogger requestLogger,
-      GenericQueryMetricsFactory queryMetricsFactory
+      GenericQueryMetricsFactory queryMetricsFactory,
+      Escalator escalator
   )
   {
     this.warehouse = warehouse;
@@ -136,6 +139,7 @@ public class AsyncQueryForwardingServlet extends AsyncProxyServlet implements Qu
     this.emitter = emitter;
     this.requestLogger = requestLogger;
     this.queryMetricsFactory = queryMetricsFactory;
+    this.escalator = escalator;
   }
 
   @Override
@@ -209,14 +213,11 @@ public class AsyncQueryForwardingServlet extends AsyncProxyServlet implements Qu
               );
             }
           };
-
-          Request broadcastReq = broadcastClient
+          broadcastClient
               .newRequest(rewriteURI(request, server.getScheme(), server.getHost()))
               .method(HttpMethod.DELETE)
-              .timeout(CANCELLATION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-
-          copyRequestHeaders(request, broadcastReq);
-          broadcastReq.send(completeListener);
+              .timeout(CANCELLATION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+              .send(completeListener);
         }
         interruptedQueryCount.incrementAndGet();
       }
@@ -346,7 +347,7 @@ public class AsyncQueryForwardingServlet extends AsyncProxyServlet implements Qu
   @Override
   protected HttpClient newHttpClient()
   {
-    return httpClientProvider.get();
+    return escalator.createEscalatedJettyClient(httpClientProvider.get());
   }
 
   @Override

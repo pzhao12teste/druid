@@ -34,14 +34,12 @@ public class DoubleDimensionIndexer implements DimensionIndexer<Double, Double, 
 {
 
   @Override
-  public Double processRowValsToUnsortedEncodedKeyComponent(Object dimValues, boolean reportParseExceptions)
+  public Double processRowValsToUnsortedEncodedKeyComponent(Object dimValues)
   {
     if (dimValues instanceof List) {
       throw new UnsupportedOperationException("Numeric columns do not support multivalue rows.");
     }
-    Double ret = DimensionHandlerUtils.convertObjectToDouble(dimValues, reportParseExceptions);
-    // remove null -> zero conversion when https://github.com/druid-io/druid/pull/5278 series of patches is merged
-    return ret == null ? DimensionHandlerUtils.ZERO_DOUBLE : ret;
+    return DimensionHandlerUtils.convertObjectToDouble(dimValues);
   }
 
   @Override

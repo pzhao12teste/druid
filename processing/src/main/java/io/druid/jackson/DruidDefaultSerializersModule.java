@@ -29,7 +29,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Throwables;
-import io.druid.java.util.common.DateTimes;
 import io.druid.java.util.common.guava.Accumulator;
 import io.druid.java.util.common.guava.Sequence;
 import io.druid.java.util.common.guava.Yielder;
@@ -37,6 +36,7 @@ import org.joda.time.DateTimeZone;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.TimeZone;
 
 /**
  */
@@ -57,7 +57,13 @@ public class DruidDefaultSerializersModule extends SimpleModule
               throws IOException
           {
             String tzId = jp.getText();
-            return DateTimes.inferTzfromString(tzId);
+            try {
+              return DateTimeZone.forID(tzId);
+            }
+            catch (IllegalArgumentException e) {
+              // also support Java timezone strings
+              return DateTimeZone.forTimeZone(TimeZone.getTimeZone(tzId));
+            }
           }
         }
     );

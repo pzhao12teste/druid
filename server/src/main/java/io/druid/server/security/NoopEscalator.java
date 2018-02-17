@@ -30,6 +30,12 @@ public class NoopEscalator implements Escalator
   }
 
   @Override
+  public org.eclipse.jetty.client.HttpClient createEscalatedJettyClient(org.eclipse.jetty.client.HttpClient baseClient)
+  {
+    return baseClient;
+  }
+
+  @Override
   public AuthenticationResult createEscalatedAuthenticationResult()
   {
     return AllowAllAuthenticator.ALLOW_ALL_RESULT;
