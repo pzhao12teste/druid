@@ -20,7 +20,6 @@
 package io.druid.sql.calcite.expression.builtin;
 
 import com.google.common.collect.ImmutableList;
-import io.druid.java.util.common.DateTimes;
 import io.druid.sql.calcite.expression.DruidExpression;
 import io.druid.sql.calcite.expression.Expressions;
 import io.druid.sql.calcite.expression.OperatorConversions;
@@ -73,7 +72,7 @@ public class TimeFormatOperatorConversion implements SqlOperatorConversion
                            ? RexLiteral.stringValue(call.getOperands().get(1))
                            : "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
     final DateTimeZone timeZone = call.getOperands().size() > 2 && !RexLiteral.isNullLiteral(call.getOperands().get(2))
-                                  ? DateTimes.inferTzfromString(RexLiteral.stringValue(call.getOperands().get(2)))
+                                  ? DateTimeZone.forID(RexLiteral.stringValue(call.getOperands().get(2)))
                                   : plannerContext.getTimeZone();
 
     return DruidExpression.fromFunctionCall(

@@ -101,8 +101,9 @@ public class HavingSpecTest
         "value", 1.3
     );
     ObjectMapper mapper = new DefaultObjectMapper();
-    // noinspection unused
+    @SuppressWarnings("unused") // expected exception
     HavingSpec spec = mapper.convertValue(greaterMap, HavingSpec.class);
+
   }
 
   @Test
@@ -155,62 +156,7 @@ public class HavingSpecTest
     assertFalse(spec.eval(getTestRow(100.05f)));
 
     spec = new EqualToHavingSpec("metric", 100.56f);
-    assertFalse(spec.eval(getTestRow(100L)));
-    assertFalse(spec.eval(getTestRow(100.0)));
-    assertFalse(spec.eval(getTestRow(100d)));
-    assertFalse(spec.eval(getTestRow(100.56d))); // False since 100.56d != (double) 100.56f
-    assertFalse(spec.eval(getTestRow(90.53d)));
     assertTrue(spec.eval(getTestRow(100.56f)));
-    assertFalse(spec.eval(getTestRow(90.53f)));
-    assertFalse(spec.eval(getTestRow(Long.MAX_VALUE)));
-
-    spec = new EqualToHavingSpec("metric", 100.56d);
-    assertFalse(spec.eval(getTestRow(100L)));
-    assertFalse(spec.eval(getTestRow(100.0)));
-    assertFalse(spec.eval(getTestRow(100d)));
-    assertTrue(spec.eval(getTestRow(100.56d)));
-    assertFalse(spec.eval(getTestRow(90.53d)));
-    assertFalse(spec.eval(getTestRow(100.56f))); // False since 100.56d != (double) 100.56f
-    assertFalse(spec.eval(getTestRow(90.53f)));
-    assertFalse(spec.eval(getTestRow(Long.MAX_VALUE)));
-
-    spec = new EqualToHavingSpec("metric", 100.0f);
-    assertTrue(spec.eval(getTestRow(100L)));
-    assertTrue(spec.eval(getTestRow(100.0)));
-    assertTrue(spec.eval(getTestRow(100d)));
-    assertFalse(spec.eval(getTestRow(100.56d)));
-    assertFalse(spec.eval(getTestRow(90.53d)));
-    assertFalse(spec.eval(getTestRow(100.56f)));
-    assertFalse(spec.eval(getTestRow(90.53f)));
-    assertFalse(spec.eval(getTestRow(Long.MAX_VALUE)));
-
-    spec = new EqualToHavingSpec("metric", 100.0d);
-    assertTrue(spec.eval(getTestRow(100L)));
-    assertTrue(spec.eval(getTestRow(100.0)));
-    assertTrue(spec.eval(getTestRow(100d)));
-    assertFalse(spec.eval(getTestRow(100.56d)));
-    assertFalse(spec.eval(getTestRow(90.53d)));
-    assertFalse(spec.eval(getTestRow(100.56f)));
-    assertFalse(spec.eval(getTestRow(90.53f)));
-    assertFalse(spec.eval(getTestRow(Long.MAX_VALUE)));
-
-    spec = new EqualToHavingSpec("metric", 100);
-    assertTrue(spec.eval(getTestRow(100L)));
-    assertTrue(spec.eval(getTestRow(100.0)));
-    assertTrue(spec.eval(getTestRow(100d)));
-    assertFalse(spec.eval(getTestRow(100.56d)));
-    assertFalse(spec.eval(getTestRow(90.53d)));
-    assertFalse(spec.eval(getTestRow(100.56f)));
-    assertFalse(spec.eval(getTestRow(90.53f)));
-    assertFalse(spec.eval(getTestRow(Long.MAX_VALUE)));
-
-    spec = new EqualToHavingSpec("metric", 100L);
-    assertTrue(spec.eval(getTestRow(100L)));
-    assertTrue(spec.eval(getTestRow(100.0)));
-    assertTrue(spec.eval(getTestRow(100d)));
-    assertFalse(spec.eval(getTestRow(100.56d)));
-    assertFalse(spec.eval(getTestRow(90.53d)));
-    assertFalse(spec.eval(getTestRow(100.56f)));
     assertFalse(spec.eval(getTestRow(90.53f)));
     assertFalse(spec.eval(getTestRow(Long.MAX_VALUE)));
   }

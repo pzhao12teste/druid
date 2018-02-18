@@ -30,7 +30,6 @@ import io.druid.metadata.MetadataStorageConnector;
 import io.druid.metadata.MetadataStorageTablesConfig;
 import org.joda.time.Duration;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -167,66 +166,36 @@ public class ConfigManager
   }
 
 
-  public <T> SetResult set(final String key, final ConfigSerde<T> serde, final T obj)
+  public <T> boolean set(final String key, final ConfigSerde<T> serde, final T obj)
   {
     if (obj == null || !started) {
-      if (obj == null) {
-        return SetResult.fail(new IllegalAccessException("input obj is null"));
-      } else {
-        return SetResult.fail(new IllegalStateException("configManager is not started yet"));
-      }
+      return false;
     }
 
     final byte[] newBytes = serde.serialize(obj);
 
     try {
-      exec.submit(
-          () -> {
-            dbConnector.insertOrUpdate(configTable, "name", "payload", key, newBytes);
+      return exec.submit(
+          new Callable<Boolean>()
+          {
+            @Override
+            public Boolean call() throws Exception
+            {
+              dbConnector.insertOrUpdate(configTable, "name", "payload", key, newBytes);
 
-            final ConfigHolder configHolder = watchedConfigs.get(key);
-            if (configHolder != null) {
-              configHolder.swapIfNew(newBytes);
+              final ConfigHolder configHolder = watchedConfigs.get(key);
+              if (configHolder != null) {
+                configHolder.swapIfNew(newBytes);
+              }
+
+              return true;
             }
-
-            return true;
           }
       ).get();
-      return SetResult.ok();
     }
     catch (Exception e) {
       log.warn(e, "Failed to set[%s]", key);
-      return SetResult.fail(e);
-    }
-  }
-
-  public static class SetResult
-  {
-    private final Exception exception;
-
-    public static SetResult ok()
-    {
-      return new SetResult(null);
-    }
-
-    public static SetResult fail(Exception e)
-    {
-      return new SetResult(e);
-    }
-
-    private SetResult(@Nullable Exception exception)
-    {
-      this.exception = exception;
-    }
-
-    public boolean isOk()
-    {
-      return exception == null;
-    }
-
-    public Exception getException()
-    {
-      return exception;
+      return false;
     }
   }
 

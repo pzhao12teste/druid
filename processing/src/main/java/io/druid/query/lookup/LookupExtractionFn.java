@@ -37,14 +37,18 @@ public class LookupExtractionFn extends FunctionalExtraction
 {
   private final LookupExtractor lookup;
   private final boolean optimize;
+  // Thes are retained for auto generated hashCode and Equals
+  private final boolean retainMissingValue;
+  private final String replaceMissingValueWith;
+  private final boolean injective;
 
   @JsonCreator
   public LookupExtractionFn(
       @JsonProperty("lookup") final LookupExtractor lookup,
       @JsonProperty("retainMissingValue") final boolean retainMissingValue,
       @Nullable @JsonProperty("replaceMissingValueWith") final String replaceMissingValueWith,
-      @JsonProperty("injective") final Boolean injective,
-      @JsonProperty("optimize") final Boolean optimize
+      @JsonProperty("injective") final boolean injective,
+      @JsonProperty("optimize") Boolean optimize
   )
   {
     super(
@@ -59,10 +63,13 @@ public class LookupExtractionFn extends FunctionalExtraction
         },
         retainMissingValue,
         replaceMissingValueWith,
-        injective != null ? injective : lookup.isOneToOne()
+        injective
     );
     this.lookup = lookup;
     this.optimize = optimize == null ? true : optimize;
+    this.retainMissingValue = retainMissingValue;
+    this.injective = injective;
+    this.replaceMissingValueWith = replaceMissingValueWith;
   }
 
 
@@ -168,9 +175,9 @@ public class LookupExtractionFn extends FunctionalExtraction
     return "LookupExtractionFn{" +
            "lookup=" + lookup +
            ", optimize=" + optimize +
-           ", retainMissingValue=" + isRetainMissingValue() +
-           ", replaceMissingValueWith='" + getReplaceMissingValueWith() + '\'' +
-           ", injective=" + isInjective() +
+           ", retainMissingValue=" + retainMissingValue +
+           ", replaceMissingValueWith='" + replaceMissingValueWith + '\'' +
+           ", injective=" + injective +
            '}';
   }
 }

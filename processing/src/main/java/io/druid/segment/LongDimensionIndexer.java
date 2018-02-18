@@ -34,15 +34,13 @@ public class LongDimensionIndexer implements DimensionIndexer<Long, Long, Long>
 {
 
   @Override
-  public Long processRowValsToUnsortedEncodedKeyComponent(Object dimValues, boolean reportParseExceptions)
+  public Long processRowValsToUnsortedEncodedKeyComponent(Object dimValues)
   {
     if (dimValues instanceof List) {
       throw new UnsupportedOperationException("Numeric columns do not support multivalue rows.");
     }
 
-    Long ret = DimensionHandlerUtils.convertObjectToLong(dimValues, reportParseExceptions);
-    // remove null -> zero conversion when https://github.com/druid-io/druid/pull/5278 series of patches is merged
-    return ret == null ? DimensionHandlerUtils.ZERO_LONG : ret;
+    return DimensionHandlerUtils.convertObjectToLong(dimValues);
   }
 
   @Override
