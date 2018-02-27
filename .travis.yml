@@ -23,6 +23,7 @@ cache:
   directories:
   - $HOME/.m2
   - $HOME/CACHE
+  - $HOME/CACHE
 dist: trusty
 group: deprecated-2017Q4
 jdk:
@@ -55,6 +56,7 @@ matrix:
       fi
     cache:
       directories:
+      - $HOME/CACHE
       - $HOME/CACHE
     env:
     - NAME="strict compilation"
@@ -94,6 +96,7 @@ matrix:
       fi
     cache:
       directories:
+      - $HOME/CACHE
       - $HOME/CACHE
     env:
     - NAME="processing module test"
@@ -135,6 +138,7 @@ matrix:
     cache:
       directories:
       - $HOME/CACHE
+      - $HOME/CACHE
     env:
     - NAME="server module test"
     install: echo "MAVEN_OPTS='-Xmx3000m'" > ~/.mavenrc && mvn install -q -ff -DskipTests
@@ -173,6 +177,7 @@ matrix:
       fi
     cache:
       directories:
+      - $HOME/CACHE
       - $HOME/CACHE
     env:
     - NAME="other modules test"
@@ -218,6 +223,7 @@ matrix:
       fi
     cache:
       directories:
+      - $HOME/CACHE
       - $HOME/CACHE
     env:
     - NAME="integration test"

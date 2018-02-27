@@ -21,127 +21,158 @@ package io.druid.server.coordinator;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Preconditions;
+import io.druid.client.indexing.ClientCompactQueryTuningConfig;
+import org.joda.time.Period;
 
 import javax.annotation.Nullable;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class CoordinatorCompactionConfig
 {
-  public static final String CONFIG_KEY = "coordinator.compaction.config";
+  // should be synchronized with Tasks.DEFAULT_MERGE_TASK_PRIORITY
+  private static final int DEFAULT_COMPACTION_TASK_PRIORITY = 25;
+  private static final long DEFAULT_TARGET_COMPACTION_SIZE_BYTES = 800 * 1024 * 1024; // 800MB
+  private static final int DEFAULT_NUM_TARGET_COMPACTION_SEGMENTS = 150;
+  private static final Period DEFAULT_SKIP_OFFSET_FROM_LATEST = new Period("P1D");
 
-  private static final double DEFAULT_COMPACTION_TASK_RATIO = 0.1;
-  private static final int DEFAILT_MAX_COMPACTION_TASK_SLOTS = Integer.MAX_VALUE;
-
-  private final List<DataSourceCompactionConfig> compactionConfigs;
-  private final double compactionTaskSlotRatio;
-  private final int maxCompactionTaskSlots;
-
-  public static CoordinatorCompactionConfig from(
-      CoordinatorCompactionConfig baseConfig,
-      List<DataSourceCompactionConfig> compactionConfigs
-  )
-  {
-    return new CoordinatorCompactionConfig(
-        compactionConfigs,
-        baseConfig.compactionTaskSlotRatio,
-        baseConfig.maxCompactionTaskSlots
-    );
-  }
-
-  public static CoordinatorCompactionConfig from(
-      CoordinatorCompactionConfig baseConfig,
-      @Nullable Double compactionTaskSlotRatio,
-      @Nullable Integer maxCompactionTaskSlots
-  )
-  {
-    return new CoordinatorCompactionConfig(
-        baseConfig.compactionConfigs,
-        compactionTaskSlotRatio == null ? baseConfig.compactionTaskSlotRatio : compactionTaskSlotRatio,
-        maxCompactionTaskSlots == null ? baseConfig.maxCompactionTaskSlots : maxCompactionTaskSlots
-    );
-  }
-
-  public static CoordinatorCompactionConfig from(List<DataSourceCompactionConfig> compactionConfigs)
-  {
-    return new CoordinatorCompactionConfig(compactionConfigs, null, null);
-  }
-
-  public static CoordinatorCompactionConfig empty()
-  {
-    return new CoordinatorCompactionConfig(ImmutableList.of(), null, null);
-  }
+  private final String dataSource;
+  private final int taskPriority;
+  private final long targetCompactionSizeBytes;
+  // The number of compaction segments is limited because the byte size of a serialized task spec is limited by
+  // RemoteTaskRunnerConfig.maxZnodeBytes.
+  private final int numTargetCompactionSegments;
+  private final Period skipOffsetFromLatest;
+  private final ClientCompactQueryTuningConfig tuningConfig;
+  private final Map<String, Object> taskContext;
 
   @JsonCreator
   public CoordinatorCompactionConfig(
-      @JsonProperty("compactionConfigs") List<DataSourceCompactionConfig> compactionConfigs,
-      @JsonProperty("compactionTaskSlotRatio") @Nullable Double compactionTaskSlotRatio,
-      @JsonProperty("maxCompactionTaskSlots") @Nullable Integer maxCompactionTaskSlots
+      @JsonProperty("dataSource") String dataSource,
+      @JsonProperty("taskPriority") Integer taskPriority,
+      @JsonProperty("targetCompactionSizeBytes") Long targetCompactionSizeBytes,
+      @JsonProperty("numTargetCompactionSegments") Integer numTargetCompactionSegments,
+      @JsonProperty("skipOffsetFromLatest") Period skipOffsetFromLatest,
+      @JsonProperty("tuningConfig") ClientCompactQueryTuningConfig tuningConfig,
+      @JsonProperty("taskContext") Map<String, Object> taskContext
   )
   {
-    this.compactionConfigs = compactionConfigs;
-    this.compactionTaskSlotRatio = compactionTaskSlotRatio == null ?
-                                   DEFAULT_COMPACTION_TASK_RATIO :
-                                   compactionTaskSlotRatio;
-    this.maxCompactionTaskSlots = maxCompactionTaskSlots == null ?
-                                  DEFAILT_MAX_COMPACTION_TASK_SLOTS :
-                                  maxCompactionTaskSlots;
+    this.dataSource = Preconditions.checkNotNull(dataSource, "dataSource");
+    this.taskPriority = taskPriority == null ?
+                        DEFAULT_COMPACTION_TASK_PRIORITY :
+                        taskPriority;
+    this.targetCompactionSizeBytes = targetCompactionSizeBytes == null ?
+                                     DEFAULT_TARGET_COMPACTION_SIZE_BYTES :
+                                     targetCompactionSizeBytes;
+    this.numTargetCompactionSegments = numTargetCompactionSegments == null ?
+                                       DEFAULT_NUM_TARGET_COMPACTION_SEGMENTS :
+                                       numTargetCompactionSegments;
+    this.skipOffsetFromLatest = skipOffsetFromLatest == null ? DEFAULT_SKIP_OFFSET_FROM_LATEST : skipOffsetFromLatest;
+    this.tuningConfig = tuningConfig;
+    this.taskContext = taskContext;
+
+    Preconditions.checkArgument(
+        this.numTargetCompactionSegments > 1,
+        "numTargetCompactionSegments should be larger than 1"
+    );
   }
 
   @JsonProperty
-  public List<DataSourceCompactionConfig> getCompactionConfigs()
+  public String getDataSource()
   {
-    return compactionConfigs;
+    return dataSource;
   }
 
   @JsonProperty
-  public double getCompactionTaskSlotRatio()
+  public int getTaskPriority()
   {
-    return compactionTaskSlotRatio;
+    return taskPriority;
   }
 
   @JsonProperty
-  public int getMaxCompactionTaskSlots()
+  public long getTargetCompactionSizeBytes()
   {
-    return maxCompactionTaskSlots;
+    return targetCompactionSizeBytes;
   }
 
-  @Override
-  public String toString()
+  @JsonProperty
+  public int getNumTargetCompactionSegments()
   {
-    return "CoordinatorCompactionConfig{" +
-           ", compactionConfigs=" + compactionConfigs +
-           ", compactionTaskSlotRatio=" + compactionTaskSlotRatio +
-           ", maxCompactionTaskSlots=" + maxCompactionTaskSlots +
-           '}';
+    return numTargetCompactionSegments;
   }
 
-  @Override
-  public int hashCode()
+  @JsonProperty
+  public Period getSkipOffsetFromLatest()
   {
-    return Objects.hash(compactionConfigs, compactionTaskSlotRatio, maxCompactionTaskSlots);
+    return skipOffsetFromLatest;
+  }
+
+  @JsonProperty
+  @Nullable
+  public ClientCompactQueryTuningConfig getTuningConfig()
+  {
+    return tuningConfig;
+  }
+
+  @JsonProperty
+  @Nullable
+  public Map<String, Object> getTaskContext()
+  {
+    return taskContext;
   }
 
   @Override
   public boolean equals(Object o)
   {
-    if (this == o) {
+    if (o == this) {
       return true;
     }
+
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
 
-    CoordinatorCompactionConfig that = (CoordinatorCompactionConfig) o;
+    final CoordinatorCompactionConfig that = (CoordinatorCompactionConfig) o;
 
-    if (!Objects.equals(compactionConfigs, that.compactionConfigs)) {
-      return false;
-    }
-    if (compactionTaskSlotRatio != that.compactionTaskSlotRatio) {
+    if (!dataSource.equals(that.dataSource)) {
       return false;
     }
 
-    return maxCompactionTaskSlots == that.maxCompactionTaskSlots;
+    if (taskPriority != that.taskPriority) {
+      return false;
+    }
+
+    if (targetCompactionSizeBytes != that.targetCompactionSizeBytes) {
+      return false;
+    }
+
+    if (numTargetCompactionSegments != that.numTargetCompactionSegments) {
+      return false;
+    }
+
+    if (!skipOffsetFromLatest.equals(that.skipOffsetFromLatest)) {
+      return false;
+    }
+
+    if (!Objects.equals(tuningConfig, that.tuningConfig)) {
+      return false;
+    }
+
+    return Objects.equals(taskContext, that.taskContext);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return Objects.hash(
+        dataSource,
+        taskPriority,
+        targetCompactionSizeBytes,
+        numTargetCompactionSegments,
+        skipOffsetFromLatest,
+        tuningConfig,
+        taskContext
+    );
   }
 }

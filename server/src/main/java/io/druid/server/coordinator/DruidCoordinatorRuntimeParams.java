@@ -50,7 +50,6 @@ public class DruidCoordinatorRuntimeParams
   private final ReplicationThrottler replicationManager;
   private final ServiceEmitter emitter;
   private final CoordinatorDynamicConfig coordinatorDynamicConfig;
-  private final CoordinatorCompactionConfig coordinatorCompactionConfig;
   private final CoordinatorStats stats;
   private final DateTime balancerReferenceTimestamp;
   private final BalancerStrategy balancerStrategy;
@@ -66,7 +65,6 @@ public class DruidCoordinatorRuntimeParams
       ReplicationThrottler replicationManager,
       ServiceEmitter emitter,
       CoordinatorDynamicConfig coordinatorDynamicConfig,
-      CoordinatorCompactionConfig coordinatorCompactionConfig,
       CoordinatorStats stats,
       DateTime balancerReferenceTimestamp,
       BalancerStrategy balancerStrategy
@@ -82,7 +80,6 @@ public class DruidCoordinatorRuntimeParams
     this.replicationManager = replicationManager;
     this.emitter = emitter;
     this.coordinatorDynamicConfig = coordinatorDynamicConfig;
-    this.coordinatorCompactionConfig = coordinatorCompactionConfig;
     this.stats = stats;
     this.balancerReferenceTimestamp = balancerReferenceTimestamp;
     this.balancerStrategy = balancerStrategy;
@@ -138,11 +135,6 @@ public class DruidCoordinatorRuntimeParams
     return coordinatorDynamicConfig;
   }
 
-  public CoordinatorCompactionConfig getCoordinatorCompactionConfig()
-  {
-    return coordinatorCompactionConfig;
-  }
-
   public CoordinatorStats getCoordinatorStats()
   {
     return stats;
@@ -181,7 +173,6 @@ public class DruidCoordinatorRuntimeParams
         replicationManager,
         emitter,
         coordinatorDynamicConfig,
-        coordinatorCompactionConfig,
         stats,
         balancerReferenceTimestamp,
         balancerStrategy
@@ -201,7 +192,6 @@ public class DruidCoordinatorRuntimeParams
         replicationManager,
         emitter,
         coordinatorDynamicConfig,
-        coordinatorCompactionConfig,
         stats,
         balancerReferenceTimestamp,
         balancerStrategy
@@ -220,7 +210,6 @@ public class DruidCoordinatorRuntimeParams
     private ReplicationThrottler replicationManager;
     private ServiceEmitter emitter;
     private CoordinatorDynamicConfig coordinatorDynamicConfig;
-    private CoordinatorCompactionConfig coordinatorCompactionConfig;
     private CoordinatorStats stats;
     private DateTime balancerReferenceTimestamp;
     private BalancerStrategy balancerStrategy;
@@ -238,7 +227,6 @@ public class DruidCoordinatorRuntimeParams
       this.emitter = null;
       this.stats = new CoordinatorStats();
       this.coordinatorDynamicConfig = CoordinatorDynamicConfig.builder().build();
-      this.coordinatorCompactionConfig = CoordinatorCompactionConfig.empty();
       this.balancerReferenceTimestamp = DateTimes.nowUtc();
     }
 
@@ -253,7 +241,6 @@ public class DruidCoordinatorRuntimeParams
         ReplicationThrottler replicationManager,
         ServiceEmitter emitter,
         CoordinatorDynamicConfig coordinatorDynamicConfig,
-        CoordinatorCompactionConfig coordinatorCompactionConfig,
         CoordinatorStats stats,
         DateTime balancerReferenceTimestamp,
         BalancerStrategy balancerStrategy
@@ -269,7 +256,6 @@ public class DruidCoordinatorRuntimeParams
       this.replicationManager = replicationManager;
       this.emitter = emitter;
       this.coordinatorDynamicConfig = coordinatorDynamicConfig;
-      this.coordinatorCompactionConfig = coordinatorCompactionConfig;
       this.stats = stats;
       this.balancerReferenceTimestamp = balancerReferenceTimestamp;
       this.balancerStrategy = balancerStrategy;
@@ -288,7 +274,6 @@ public class DruidCoordinatorRuntimeParams
           replicationManager,
           emitter,
           coordinatorDynamicConfig,
-          coordinatorCompactionConfig,
           stats,
           balancerReferenceTimestamp,
           balancerStrategy
@@ -379,12 +364,6 @@ public class DruidCoordinatorRuntimeParams
     public Builder withDynamicConfigs(CoordinatorDynamicConfig configs)
     {
       this.coordinatorDynamicConfig = configs;
-      return this;
-    }
-
-    public Builder withCompactionConfig(CoordinatorCompactionConfig config)
-    {
-      this.coordinatorCompactionConfig = config;
       return this;
     }
 
